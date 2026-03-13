@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chicken Hub - 最懂你的品雞網站</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+
+        :root {
+            --bg-dark: #050505;
+            --accent: #ff9000;
+            --text-main: #ffffff;
+            --text-sub: #aaaaaa;
+            --glass-bg: rgba(20, 20, 20, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --blur: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: var(--text-main); 
+            overflow-x: hidden; 
+            user-select: none; 
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+            transition: filter 1s ease, transform 0.3s var(--spring);
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        .glass { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(var(--blur)); 
+            -webkit-backdrop-filter: blur(var(--blur)); 
+            border: 1px solid var(--glass-border); 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); 
+        }
+
+        .liquid-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.15; will-change: transform; }
+        .blob-1 { width: 50vw; height: 50vw; background: #ff9000; top: -20vh; left: -10vw; animation: breathe 12s infinite alternate ease-in-out; }
+        .blob-2 { width: 60vw; height: 60vw; background: #dc143c; bottom: -20vh; right: -10vw; animation: breathe 15s infinite alternate-reverse ease-in-out; }
+        .blob-3 { width: 40vw; height: 40vw; background: #ffd700; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.1; transition: transform 0.2s ease-out; }
+        @keyframes breathe { 0% { transform: scale(1) translate(0, 0); } 100% { transform: scale(1.1) translate(30px, 30px); } }
+
+        body.glitch-mode, .crazy-shake { animation: screen-shake 0.1s infinite; pointer-events: none; filter: hue-rotate(90deg) saturate(200%); }
+        @keyframes screen-shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(5px, 5px) rotate(1deg); }
+            50% { transform: translate(-5px, -5px) rotate(-1deg); }
+            75% { transform: translate(-5px, 5px) rotate(1deg); }
+        }
+
+        header { position: sticky; top: 0; height: 75px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; z-index: 10000; border-bottom: 1px solid var(--glass-border); }
+        .header-left { flex: 1; display: flex; align-items: center; position: relative; z-index: 10001; }
+        
+        .logo { display: flex; align-items: center; font-size: 26px; font-weight: 900; letter-spacing: -1px; cursor: pointer; transition: var(--spring); transform-origin: left center; }
+        .logo .hub { background: var(--accent); color: #000; padding: 2px 8px; border-radius: 6px; margin-left: 5px; display: inline-block; transition: all 0.4s var(--spring); }
+        .logo:hover { transform: scale(1.05); text-shadow: 0 0 20px rgba(255,144,0,0.8); }
+        .logo:hover .hub { transform: scale(1.15) rotate(6deg) translateY(-2px); background: #fff; color: var(--accent); box-shadow: 0 5px 15px rgba(255,255,255,0.5); }
+
+        .island-wrapper { position: absolute; left: 50%; top: 17.5px; transform: translateX(-50%); z-index: 10002; }
+        #dynamic-island { width: 160px; height: 40px; background: #000; border-radius: 20px; transition: all 0.4s var(--spring); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,144,0,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.8); cursor: pointer; margin: 0 auto; will-change: width, height; }
+        #dynamic-island:hover:not(.expanded) { transform: scale(1.05); border-color: var(--accent); }
+        #dynamic-island.expanded { width: 320px; height: 110px; border-radius: 24px; cursor: default; background: #111; z-index: 10003; }
+        .island-header { height: 40px; min-height: 40px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--accent); font-weight: 800; font-size: 0.95rem; }
+        .island-content { width: 100%; height: 70px; padding: 0 15px; opacity: 0; transition: opacity 0.3s; pointer-events: none; display: flex; align-items: center; gap: 15px; }
+        #dynamic-island.expanded .island-content { opacity: 1; pointer-events: auto; transition-delay: 0.2s; }
+        
+        .music-disc { width: 50px; height: 50px; border-radius: 50%; background: url('https://i.imgflip.com/2/1ur9b0.jpg') center/cover; animation: spin 4s linear infinite paused; border: 2px solid var(--accent); flex-shrink: 0; }
+        #dynamic-island.expanded .music-disc.playing { animation-play-state: running; }
+        .music-info { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        .music-info span { font-size: 0.95rem; font-weight: bold; color: #fff; white-space: nowrap; }
+        .music-info small { font-size: 0.8rem; color: var(--accent); }
+        .music-ctrl { background: var(--text-main); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: #000; transition: transform 0.2s; }
+        .music-ctrl:hover { transform: scale(1.15); background: var(--accent); }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .header-right { flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 20px; }
+        
+        .search-wrapper { position: relative; width: 300px; z-index: 1000; }
+        .search-bar { display: flex; height: 40px; width: 100%; position: relative; }
+        .search-bar input { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px 0 0 20px; padding: 0 20px; color: white; outline: none; transition: var(--transition); }
+        .search-bar input:focus { border-color: var(--accent); background: rgba(255,144,0,0.05); }
+        .search-bar button { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-left: none; border-radius: 0 20px 20px 0; padding: 0 20px; color: #fff; cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; }
+        .search-bar button:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+        
+        .search-suggestions { position: absolute; top: 50px; left: 0; width: 100%; border-radius: 16px; padding: 10px 0; opacity: 0; pointer-events: none; transform: translateY(-10px); transition: var(--transition); z-index: 999; }
+        .search-suggestions.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .suggest-item { padding: 12px 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
+        .suggest-item:hover { background: rgba(255,144,0,0.1); color: var(--accent); padding-left: 25px; }
+
+        .header-icons { display: flex; gap: 10px; align-items: center; font-size: 1.2rem; position: relative; z-index: 10001; }
+        .icon-wrap { position: relative; cursor: pointer; transition: var(--spring); display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; }
+        .icon-wrap:hover { color: var(--accent); background: rgba(255,255,255,0.1); transform: scale(1.15); }
+        .badge { position: absolute; top: 0; right: 0; background: #ff3333; color: white; font-size: 0.7rem; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #000; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff3300); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; cursor: pointer; margin-left: 5px; transition: var(--spring); }
+        .user-avatar:hover { transform: scale(1.15); box-shadow: 0 0 15px rgba(255,144,0,0.5); }
+
+        .dropdown-menu { position: absolute; top: 60px; right: 0; border-radius: 16px; padding: 10px; opacity: 0; pointer-events: none; transform: translateY(-10px) scale(0.95); transition: all 0.3s var(--spring); z-index: 10000; transform-origin: top right; background: rgba(10, 10, 10, 0.98); border: 2px solid var(--accent); box-shadow: 0 20px 60px rgba(0,0,0,0.9); }
+        .dropdown-menu.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+        .notif-menu { width: 320px; right: 50px; }
+        .avatar-menu { width: 230px; right: 0; }
+        .menu-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.95rem; line-height: 1.4; transition: 0.2s; border-radius: 8px; cursor: pointer; position: relative; display: flex; align-items: center; gap: 12px; font-weight: bold; }
+        .menu-item:hover { background: rgba(255,144,0,0.15); transform: translateX(5px); color: var(--accent); }
+        .notif-item.read { opacity: 0.5; }
+
+        #chat-widget { position: fixed; bottom: 20px; right: 30px; width: 340px; height: 450px; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; z-index: 9999; transform: translateY(120%) scale(0.9); opacity: 0; transition: all 0.4s var(--spring); box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid var(--glass-border); transform-origin: bottom right; }
+        #chat-widget.active { transform: translateY(0) scale(1); opacity: 1; }
+        .chat-header { background: rgba(255,144,0,0.15); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--accent); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: rgba(0,0,0,0.6); scroll-behavior: smooth; }
+        .msg-bubble { max-width: 85%; padding: 10px 15px; border-radius: 15px; font-size: 0.95rem; line-height: 1.4; animation: popIn 0.3s var(--spring); }
+        .msg-left { background: #222; color: #fff; align-self: flex-start; border-bottom-left-radius: 0; }
+        .msg-right { background: var(--accent); color: #000; align-self: flex-end; border-bottom-right-radius: 0; font-weight: bold; }
+        .chat-footer { padding: 10px; display: flex; gap: 10px; background: rgba(10,10,10,0.9); border-top: 1px solid rgba(255,255,255,0.05); }
+        .chat-footer input { flex: 1; border-radius: 20px; border: 1px solid #333; background: #111; color: #fff; padding: 8px 15px; outline: none; transition: var(--transition); }
+        .chat-footer input:focus { border-color: var(--accent); }
+        .chat-footer button { border: none; background: var(--accent); color: #000; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; transition: var(--spring); }
+        .chat-footer button:hover { transform: scale(1.15) rotate(10deg); }
+        
+        #toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ffb300, #ff8800); color: #000; padding: 14px 28px; border-radius: 30px; font-weight: 900; font-size: 1rem; z-index: 999999; box-shadow: 0 10px 30px rgba(255,144,0,0.5); border: 2px solid #000; transition: top 0.4s var(--spring); pointer-events: none; letter-spacing: 0.5px; }
+        #toast.show { top: 30px; }
+
+        .layout { display: flex; min-height: calc(100vh - 75px); }
+        .sidebar { width: 240px; padding: 20px 0; border-right: 1px solid var(--glass-border); position: sticky; top: 75px; height: calc(100vh - 75px); overflow-y: auto; z-index: 10; transition: var(--transition); }
+        .nav-item { padding: 15px 30px; display: flex; align-items: center; gap: 15px; color: var(--text-sub); cursor: pointer; transition: var(--transition); font-weight: 600; border-right: 3px solid transparent; }
+        .nav-item:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
+        .nav-item.active { color: var(--accent); background: linear-gradient(90deg, transparent, rgba(255, 144, 0, 0.1)); border-right-color: var(--accent); }
+        
+        @keyframes police-breath {
+            0%, 100% { color: #ff3333; text-shadow: 0 0 15px #ff3333; background: rgba(255, 51, 51, 0.15); border-right-color: #ff3333; box-shadow: inset 4px 0 0 #ff3333; }
+            50% { color: #3388ff; text-shadow: 0 0 15px #3388ff; background: rgba(51, 136, 255, 0.15); border-right-color: #3388ff; box-shadow: inset 4px 0 0 #3388ff; }
+        }
+        .nav-item[data-category="underage"] { animation: police-breath 1.2s infinite; font-weight: 800; border-radius: 0 20px 20px 0; margin-top: 5px; }
+
+        @keyframes fbi-bg { 0%, 100% { background: rgba(255, 0, 0, 0.95); } 50% { background: rgba(0, 0, 255, 0.95); } }
+
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
+        .section-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; row-gap: 35px; }
+        .video-card { cursor: pointer; transition: all 0.3s var(--spring); border-radius: 16px; opacity: 0; transform: translateY(30px) scale(0.95); will-change: transform, opacity; }
+        .video-card.show { opacity: 1; transform: translateY(0) scale(1); }
+        .video-card:hover { transform: translateY(-8px) scale(1.02); z-index: 2; }
+        
+        .thumbnail-container { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 16px; overflow: hidden; background: #111; margin-bottom: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: box-shadow 0.3s; }
+        .video-card:hover .thumbnail-container { box-shadow: 0 15px 30px rgba(255,144,0,0.2); }
+        .thumbnail-container img { width: 100%; height: 100%; object-fit: cover; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform, filter; }
+        .video-card:hover .thumbnail-container img { transform: scale(1.08); filter: brightness(0.6); }
+        
+        .duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.85); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; transition: opacity 0.3s; backdrop-filter: blur(4px); }
+        .hd-badge { position: absolute; top: 8px; right: 8px; background: var(--accent); color: #000; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 900; }
+        
+        .preview-progress { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--accent); width: 0; transition: width 3s linear; opacity: 0; }
+        .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); opacity: 0; font-size: 3.5rem; color: #fff; transition: all 0.3s var(--spring); filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6)); }
+        .video-card:hover .preview-progress { width: 100%; opacity: 1; }
+        .video-card:hover .play-icon { opacity: 1; transform: translate(-50%, -50%) scale(1); color: var(--accent); }
+
+        .video-info { display: flex; gap: 12px; padding: 0 5px; }
+        .uploader-avatar { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--glass-border); background: #222; }
+        .video-details { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+        .video-title { font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color 0.2s; }
+        .video-card:hover .video-title { color: var(--accent); }
+        .video-meta { font-size: 0.85rem; color: var(--text-sub); display: flex; flex-direction: column; gap: 2px; }
+
+        #video-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); z-index: 99999; display: flex; justify-content: center; align-items: center; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.3s var(--transition); }
+        #video-modal.active { opacity: 1; pointer-events: auto; }
+        .modal-content { width: 85%; max-width: 1000px; aspect-ratio: 16/9; background: #000; border-radius: 20px; overflow: hidden; border: 1px solid var(--accent); box-shadow: 0 20px 80px rgba(255,144,0,0.3); position: relative; transform: scale(0.95) translateY(20px); transition: all 0.4s var(--spring); }
+        #video-modal.active .modal-content { transform: scale(1) translateY(0); }
+        video { width: 100%; height: 100%; object-fit: contain; outline: none; }
+        .joke-subtitle { margin-top: 20px; color: var(--text-main); font-size: 1.1rem; background: rgba(255,51,0,0.15); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(255,51,0,0.5); display: none; animation: popIn 0.4s var(--spring); font-weight: bold; }
+        .close-modal { position: absolute; top: 30px; right: 40px; font-size: 2.5rem; color: rgba(255,255,255,0.8); cursor: pointer; transition: var(--spring); z-index: 10000; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); border-radius: 50%; border: 2px solid transparent; }
+        .close-modal:hover { color: #fff; background: #ff3333; transform: rotate(90deg) scale(1.1); border-color: #fff; }
+
+        #upload-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(10px); }
+        #upload-modal.active { opacity: 1; pointer-events: auto; }
+        .upload-box { background: #0f0f0f; border: 1px solid var(--glass-border); padding: 40px; border-radius: 24px; text-align: center; color: #fff; width: 90%; max-width: 500px; transition: all 0.4s var(--spring); transform: scale(0.9); box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+        #upload-modal.active .upload-box { transform: scale(1); }
+        .friction-zone { margin-top: 20px; padding: 40px; border: 2px dashed rgba(255,144,0,0.3); border-radius: 16px; cursor: ns-resize; user-select: none; touch-action: none; background: rgba(255,144,0,0.02); position: relative; overflow: hidden; transition: background 0.2s; }
+        .friction-zone.active { background: rgba(255,144,0,0.08); border-color: var(--accent); }
+        .temp-bar-container { height: 10px; width: 100%; background: #222; border-radius: 10px; margin-top: 20px; overflow: hidden; border: 1px solid #111; }
+        #temp-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #ff9000, #ff3333); transition: width 0.1s linear; }
+
+        #age-gate { position: fixed; inset: 0; background: rgba(5,5,5,0.98); z-index: 999999999; display: flex; justify-content: center; align-items: center; padding: 20px; text-align: center; transition: opacity 0.4s; backdrop-filter: blur(20px); }
+        .age-box { padding: 40px 30px; border-radius: 24px; max-width: 550px; width: 100%; transform: scale(0.9); animation: popIn 0.5s var(--spring) forwards; position: relative; background: #0f0f0f; border: 1px solid var(--glass-border); box-shadow: 0 30px 80px rgba(0,0,0,0.9); }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .age-box h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); margin-bottom: 15px; color: var(--accent); font-weight: 900; letter-spacing: -1px; }
+        .age-box p { color: var(--text-sub); margin-bottom: 30px; font-size: clamp(1rem, 3vw, 1.15rem); line-height: 1.6; word-break: keep-all; }
+        .btn-wrapper { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+        .age-btn { width: 100%; max-width: 320px; background: var(--accent); color: #000; border: none; padding: 15px; font-size: 1.1rem; font-weight: 800; border-radius: 12px; cursor: pointer; transition: all 0.3s var(--spring); }
+        .age-btn:hover { background: #fff; transform: translateY(-3px) scale(1.03); box-shadow: 0 8px 20px rgba(255,144,0,0.4); }
+        .age-btn.refuse { background: #444; color: #fff; }
+        .age-btn.refuse:hover { background: #ff3333; color: white; box-shadow: 0 8px 20px rgba(255,51,51,0.4); }
+        .vegan-btn { background: #2E7D32; color: white; position: relative; }
+
+        #boss-screen { position: fixed; inset: 0; background: #fff; z-index: 99999999; display: none; color: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; flex-direction: column; }
+        .excel-header { background: #107c41; color: white; padding: 10px 20px; font-weight: bold; display: flex; gap: 20px; align-items: center; font-size: 14px; }
+        .excel-toolbar { background: #f3f2f1; padding: 6px 15px; border-bottom: 1px solid #e1dfdd; font-size: 12px; display: flex; gap: 15px; }
+        .excel-grid { flex: 1; display: grid; grid-template-columns: 50px repeat(10, 1fr); grid-auto-rows: 25px; overflow: hidden; }
+        .excel-cell { border-right: 1px solid #e1dfdd; border-bottom: 1px solid #e1dfdd; padding: 3px 6px; font-size: 13px; display: flex; align-items: center; }
+        .excel-cell.header { background: #f3f2f1; justify-content: center; font-weight: bold; color: #333; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .header-left { flex: none; }
+            .island-wrapper { display: none; }
+            .search-wrapper { flex: 1; margin: 0 10px; width: auto; }
+            .main-content { padding: 20px; }
+            .video-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="boss-screen">
+        <div class="excel-header"><span><i class="fas fa-th"></i></span><span>Q3_Poultry_Farm_Revenue_Analysis.xlsx - Excel</span></div>
+        <div class="excel-toolbar"><span>檔案</span><span>常用</span><span>插入</span><span>版面配置</span><span>公式</span><span>資料</span><span>檢視</span></div>
+        <div class="excel-grid" id="excel-grid"></div>
+    </div>
+
+    <!-- 年齡驗證 -->
+    <div id="age-gate">
+        <div class="age-box">
+            <h1>🔥 警告：極度美味</h1>
+            <p>本網站包含高溫直火烘烤、油亮的脆皮麵衣、以及滴出鮮甜肉汁的頂級家禽料理畫面。<br>請問您是否已經孵化超過 <strong>18 天</strong>？</p>
+            <div class="btn-wrapper">
+                <button class="age-btn" id="btn-enter-site">我已滿 18 天，準備品嚐</button>
+                <button class="age-btn vegan-btn" id="btn-vegan-trap">我是素食者 🥦</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">提示訊息</div>
+
+    <!-- 影片彈出視窗 -->
+    <div id="video-modal">
+        <div class="close-modal" onclick="App.closeModal()"><i class="fas fa-times"></i></div>
+        <div class="modal-content">
+            <video id="html-player" controls playsinline>
+                <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+            </video>
+        </div>
+        <h2 id="modal-title" style="margin-top:20px; color:var(--accent); font-weight:900; font-size: 1.5rem;">影片標題</h2>
+        <div id="joke-subtitle" class="joke-subtitle">
+            ⚠️ 系統提示：偵測到您的螢幕解析度不足，本烤箱已自動為您切換至【微波爐無碼解凍模式】🔥
+        </div>
+    </div>
+
+    <div class="liquid-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3" id="blob3"></div>
+    </div>
+
+    <header class="glass">
+        <div class="header-left">
+            <div class="logo" onclick="App.renderCategory('home', '主廚為您推薦的頂級好雞')">
+                <span style="color:#fff;">CHICKEN</span><span class="hub">hub</span>
+            </div>
+        </div>
+
+        <div class="island-wrapper">
+            <div id="dynamic-island" onclick="App.expandIsland(event, this)">
+                <div class="island-header">
+                    <i class="fas fa-drumstick-bite"></i> <span id="island-text">深夜食堂🎵</span>
+                </div>
+                <div class="island-content">
+                    <div class="music-disc" id="music-disc"></div>
+                    <div class="music-info">
+                        <span>主廚私房午夜特餐.mp3</span>
+                        <small>DJ Rooster</small>
+                    </div>
+                    <button class="music-ctrl" onclick="App.togglePlay(event)"><i class="fas fa-play" id="play-btn-icon"></i></button>
+                    <audio id="troll-audio" loop src="https://www.myinstants.com/media/sounds/chicken-song.mp3"></audio>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <div class="search-wrapper">
+                <div class="search-bar">
+                    <input type="text" id="search-input" placeholder="搜尋：高溫直火、鮮甜肉汁流出..." onfocus="App.toggleSearchMenu(true)" onblur="setTimeout(()=>App.toggleSearchMenu(false), 200)" onkeypress="if(event.key === 'Enter') App.doSearch()">
+                    <button id="search-btn" onclick="App.doSearch()"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="search-suggestions glass" id="search-menu">
+                    <div class="suggest-item" onclick="App.fillSearch('巨型放山黑羽雞 霸氣塞滿秘製香料')"><i class="fas fa-fire" style="color:var(--text-sub)"></i> 巨型放山黑羽雞 霸氣塞滿秘製香料</div>
+                    <div class="suggest-item" onclick="App.fillSearch('肯爺爺 地下秘密研發廚房')"><i class="fas fa-star" style="color:var(--text-sub)"></i> 肯爺爺 地下秘密研發廚房</div>
+                </div>
+            </div>
+
+            <div class="header-icons">
+                <div class="icon-wrap" onclick="App.openUpload()" title="預熱烤箱"><i class="fas fa-fire"></i></div>
+                <div class="icon-wrap" onclick="App.toggleMenu('notif-menu', event)" title="點餐通知">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notif-badge">1</span>
+                </div>
+                <div class="user-avatar" onclick="App.toggleMenu('avatar-menu', event)" title="個人農場">C</div>
+                
+                <div class="dropdown-menu notif-menu" id="notif-menu">
+                    <div class="menu-item notif-item" onclick="App.openChat('頂級私廚 - 放山雞', '咕咕！聽說你今晚想吃宵夜？人家剛洗好澡，全身濕漉漉的，等一下就要裹粉下鍋了...', this)">
+                        <i class="fas fa-envelope-open-text" style="color:var(--accent); font-size:1.2rem;"></i>
+                        <div>附近有飢餓的食客想了解最新隱藏菜單...</div>
+                    </div>
+                </div>
+
+                <div class="dropdown-menu avatar-menu" id="avatar-menu">
+                    <div class="menu-item" onclick="App.showToast('🐔 歡迎回到您的專屬雞舍')"><i class="fas fa-home" style="width:20px;"></i> 我的專屬雞舍</div>
+                    <!-- 🔥 升級米其林功能回歸！ -->
+                    <div class="menu-item" onclick="App.upgradePremium()"><i class="fas fa-crown" style="color:var(--accent); width:20px;"></i> 升級米其林會員</div>
+                    <div class="menu-item" onclick="App.findHens()"><i class="fas fa-satellite-dish" style="color:var(--accent); width:20px;"></i> 尋找附近火熱母雞</div>
+                    <div class="menu-item" onclick="App.bonelessMode()"><i class="fas fa-skull" style="width:20px;"></i> 一鍵脫衣 (去骨模式)</div>
+                    <!-- 🔥 離開農場鎖死功能回歸！ -->
+                    <div class="menu-item" onclick="App.leaveFarm()" style="color:#ff4444"><i class="fas fa-sign-out-alt" style="width:20px;"></i> 離開農場</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="chat-widget" class="glass">
+        <div class="chat-header">
+            <span id="chat-title">🐔 頂級私廚 - 放山雞</span>
+            <i class="fas fa-times" style="cursor:pointer; font-size:1.2rem;" onclick="App.closeChat()"></i>
+        </div>
+        <div class="chat-body" id="chat-body"></div>
+        <div class="chat-footer">
+            <input type="text" id="chat-input-field" placeholder="傳送美食評價..." onkeypress="if(event.key === 'Enter') App.sendMsg()">
+            <button onclick="App.sendMsg()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div id="upload-modal" onclick="App.closeUpload(event)">
+        <div class="upload-box glass" id="upload-box-content">
+            <i class="fas fa-fire" style="font-size: 3.5rem; color: var(--accent);"></i>
+            <h2 style="margin-top: 15px;">請手動預熱您的烤箱</h2>
+            <p style="margin-top:10px; color:var(--text-sub); font-size:0.95rem;">為了確保「美味肉品」能被完美烘烤，請在下方區域<br><strong style="color:white">上下快速摩擦滑動</strong>以產生極致熱能！</p>
+            
+            <div class="friction-zone" id="friction-zone">
+                <h3 id="friction-text" style="pointer-events:none;">用力擦我！🥵</h3>
+            </div>
+            <div class="temp-bar-container"><div id="temp-bar"></div></div>
+            <h3 id="temp-display" style="margin-top:15px; color:#ff3333; font-weight:900; font-size: 1.5rem;">0°C</h3>
+        </div>
+    </div>
+
+    <div class="layout">
+        <aside class="sidebar glass">
+            <div class="nav-item active" data-category="home"><i class="fas fa-star"></i> 主廚推薦</div>
+            <div class="nav-item" data-category="trending"><i class="fas fa-fire"></i> 發燒熟肉</div>
+            <div class="nav-item" data-category="premium"><i class="fas fa-award"></i> 米其林 Premium</div>
+            <div style="margin: 15px 30px; border-bottom: 1px solid rgba(255,255,255,0.05);"></div>
+            <div class="nav-item" data-category="breasts"><i class="fas fa-drumstick-bite"></i> 鮮嫩雞胸專區</div>
+            <div class="nav-item" data-category="bbc"><i class="fas fa-utensils"></i> 巨霸黑羽雞</div>
+            
+            <div class="nav-item" data-category="oldhen"><i class="fas fa-clock"></i> 熟齡老母雞</div>
+            <div class="nav-item" data-category="ironpan"><i class="fas fa-hammer"></i> 無情鐵鍋特訓</div>
+            <div class="nav-item" data-category="magicfeed"><i class="fas fa-capsules"></i> 神秘黑市飼料</div>
+
+            <div class="nav-item" data-category="underage"><i class="fas fa-ban"></i> 禁忌小春雞(禁)</div>
+        </aside>
+
+        <main class="main-content">
+            <h2 class="section-title" id="current-category-title">主廚為您推薦的頂級好雞 <i class="fas fa-fire" style="color:#ff3333"></i></h2>
+            <div class="video-grid" id="video-container"></div>
+        </main>
+    </div>
+
+    <script>
+        window.App = {
+            toastTimeout: null,
+            ovenTemp: 0,
+            isScanning: false,
+            frictionVelocity: 0,
+            lastY: null,
+            isPlaying: false,
+
+            init() {
+                this.cacheDOM();
+                this.bindGlobalEvents();
+                this.initFrictionOven();
+                this.renderCategory('home', '主廚為您推薦的頂級好雞');
+                this.initLiquidBg();
+
+                const enterBtn = document.getElementById('btn-enter-site');
+                if(enterBtn) enterBtn.onclick = () => this.enterSite();
+
+                const veganBtn = document.getElementById('btn-vegan-trap');
+                if(veganBtn) {
+                    veganBtn.onclick = () => this.veganTrap();
+                    veganBtn.onmouseover = function() { window.App.dodgeVegan(this); };
+                    veganBtn.ontouchstart = function(e) { e.preventDefault(); window.App.dodgeVegan(this); }; 
+                }
+            },
+
+            // ================= 加入升級會員與離開雞舍函數 =================
+            upgradePremium() {
+                this.showToast('💳 正在為您連線至【黑羽雞專屬金流】...');
+                setTimeout(() => {
+                    const card = prompt('想解鎖更多「無碼鮮嫩肉汁」？請輸入信用卡號：\n（我們保證只會拿去買頂級玉米飼料）');
+                    if (card !== null) {
+                        if (card.trim().length < 8) alert(`才 ${card.length || 0} 個數字... 太短了！\n這麼短怎麼買得起我們的金黃炸雞？回去練練再來！`);
+                        else alert('🎉 感謝乾爹！\n您的味蕾已成功升級為【米其林VIP】！\n今晚請洗乾淨雙手，準備大快朵頤。');
+                    } else this.showToast('🐔 怎麼縮回去了？沒錢只好繼續看打碼的雞胸肉了。');
+                }, 500);
+            },
+
+            leaveFarm() {
+                if (confirm('🚪 外面現在有幾十隻飢渴的野狼在徘徊...\n你確定要光著身子離開雞舍嗎？')) {
+                    setTimeout(() => {
+                        if (confirm('🚨 警告：外皮烤得如此金黃酥脆！\n真的不考慮留下來被我們「高溫烘烤」嗎？')) {
+                            document.body.style.transition = 'transform 0.1s';
+                            let shakes = 0;
+                            const shakeInterval = setInterval(() => {
+                                document.body.style.transform = `translate(${(Math.random()-0.5)*30}px, ${(Math.random()-0.5)*30}px)`;
+                                if (++shakes > 15) {
+                                    clearInterval(shakeInterval);
+                                    document.body.style.transform = 'translate(0px, 0px)';
+                                    setTimeout(() => alert('❌ 逃跑失敗！\n大門已被農場主廚用烤肉架鎖死！\n今晚別想離開烤箱！'), 100);
+                                }
+                            }, 50);
+                        } else this.showToast('🥵 這就對了，乖乖裹上麵衣，準備下鍋...');
+                    }, 400);
+                } else this.showToast('🐔 算你識相，還是農場裡的母雞溫柔吧？');
+            },
+            // =========================================================
+
+            dodgeVegan(btn) {
+                btn.style.transform = `translate(${(Math.random()-0.5)*250}px, ${(Math.random()-0.5)*100}px) scale(0.9)`;
+            },
+
+            cacheDOM() {
+                this.toast = document.getElementById('toast');
+                this.searchInput = document.getElementById('search-input');
+                this.chatBody = document.getElementById('chat-body');
+                this.uploadBoxContent = document.getElementById('upload-box-content');
+            },
+
+            initLiquidBg() {
+                const b3 = document.getElementById('blob3');
+                let tX = 0, tY = 0, cX = 0, cY = 0;
+                document.addEventListener('mousemove', (e) => {
+                    tX = (e.clientX - window.innerWidth / 2) * 0.08;
+                    tY = (e.clientY - window.innerHeight / 2) * 0.08;
+                });
+                const loop = () => {
+                    cX += (tX - cX) * 0.05;
+                    cY += (tY - cY) * 0.05;
+                    b3.style.transform = `translate(calc(-50% + ${cX}px), calc(-50% + ${cY}px))`;
+                    requestAnimationFrame(loop);
+                };
+                requestAnimationFrame(loop);
+            },
+
+            bindGlobalEvents() {
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        const bs = document.getElementById('boss-screen');
+                        bs.style.display = bs.style.display === 'flex' ? 'none' : 'flex';
+                        if(this.isPlaying) this.togglePlay({stopPropagation:()=>{}}); 
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    if(e.target.closest('#boss-screen') || e.target.closest('.friction-zone')) return;
+                    this.playCluck();
+                    
+                    if(!e.target.closest('.header-icons')) {
+                        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('active'));
+                    }
+                    const island = document.getElementById('dynamic-island');
+                    if (island && !island.contains(e.target) && island.classList.contains('expanded')) {
+                        island.classList.remove('expanded');
+                        document.getElementById('island-text').innerText = "深夜食堂🎵";
+                    }
+                });
+
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const cat = item.getAttribute('data-category');
+                        if(cat === 'underage') this.triggerFBI();
+                        else if(cat === 'oldhen') this.triggerOldHen();
+                        else if(cat === 'ironpan') this.triggerIronPan();
+                        else if(cat === 'magicfeed') this.triggerMagicFeed();
+                        else this.renderCategory(cat, item.innerText);
+                    });
+                });
+            },
+
+            playCluck() {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.start(); osc.stop(ctx.currentTime + 0.1);
+                } catch(e){}
+            },
+
+            showToast(message) {
+                this.toast.innerText = message;
+                this.toast.classList.add('show');
+                clearTimeout(this.toastTimeout);
+                this.toastTimeout = setTimeout(() => this.toast.classList.remove('show'), 3500);
+            },
+
+            enterSite() {
+                const gate = document.getElementById('age-gate');
+                if(!gate) return;
+                gate.style.opacity = '0';
+                setTimeout(() => gate.remove(), 400);
+                setTimeout(() => this.showToast("🐔 歡迎進入！請放鬆您的身心，準備大塊吃肉..."), 800);
+            },
+            
+            veganTrap() {
+                document.body.innerHTML = `
+                    <div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#2E7D32; color:white;">
+                        <h1 style="font-size: 5rem; margin:0;">🥦 BANNED 🥦</h1>
+                        <h2 style="margin-top:20px;">警告：偵測到草食動物基因！</h2>
+                        <p style="margin-top:10px; font-size:1.2rem;">本高級廚房不處理純素食材。正在強制遣返至維基百科...</p>
+                    </div>`;
+                setTimeout(() => {
+                    window.location.href = "https://zh.wikipedia.org/wiki/蔬菜";
+                }, 2000);
+            },
+
+            triggerOldHen() {
+                this.showToast('👵 歲月沉澱的風味... 正在切換懷舊泛黃濾鏡。');
+                document.body.style.filter = "sepia(0.8) contrast(1.2)";
+                setTimeout(() => { document.body.style.filter = "none"; }, 5000);
+            },
+
+            triggerIronPan() {
+                this.showToast('🍳 鏗！一擊必殺，肉質已被無情拍打至極致軟爛！');
+                document.body.style.transform = "scaleY(0.1)";
+                setTimeout(() => { document.body.style.transform = "scaleY(1)"; }, 300);
+            },
+
+            triggerMagicFeed() {
+                this.showToast('💊 警告：這批玉米飼料太純了，雞群已經不受控制啦！');
+                document.body.style.filter = "hue-rotate(180deg) saturate(300%) invert(0.2)";
+                document.body.classList.add('crazy-shake');
+                setTimeout(() => { 
+                    document.body.style.filter = "none"; 
+                    document.body.classList.remove('crazy-shake');
+                }, 4000);
+            },
+
+            bonelessMode() {
+                this.showToast('🦴 啟惹一鍵去骨裸體模式！衣服脫掉！');
+                document.body.style.filter = 'invert(1) sepia(1) saturate(5) hue-rotate(315deg)';
+                setTimeout(() => {
+                    document.body.style.filter = 'none';
+                    this.showToast('🥵 尺度太大被黃標了！已強制幫您穿上酥脆麵衣！');
+                }, 4000);
+            },
+
+            findHens() {
+                this.showToast('📡 啟動雷達... 搜尋半徑 5 公里內的火熱母雞...');
+                let dots = 0;
+                const scan = setInterval(() => {
+                    dots = (dots + 1) % 4;
+                    this.showToast('📡 搜尋中' + '.'.repeat(dots));
+                }, 500);
+                setTimeout(() => {
+                    clearInterval(scan);
+                    alert('🚨 搜尋完成！\n找到 1 名對象：\n\n【肯德基爺爺】正站在您的窗外，他拿著家庭號炸雞桶，笑著看著您。');
+                }, 3500);
+            },
+
+            expandIsland(e, el) {
+                if(e.target.closest('.music-ctrl')) return; 
+                if (!el.classList.contains('expanded')) {
+                    el.classList.add('expanded');
+                    document.getElementById('island-text').innerText = "正在播放 🎵";
+                }
+            },
+
+            togglePlay(e) {
+                e.stopPropagation();
+                this.isPlaying = !this.isPlaying;
+                this.isPlaying ? document.getElementById('troll-audio').play().catch(()=>{}) : document.getElementById('troll-audio').pause();
+                document.getElementById('play-btn-icon').className = this.isPlaying ? "fas fa-pause" : "fas fa-play";
+                document.getElementById('music-disc').classList.toggle('playing', this.isPlaying);
+            },
+
+            toggleMenu(id, e) {
+                e.stopPropagation();
+                document.querySelectorAll('.dropdown-menu').forEach(m => m.id !== id && m.classList.remove('active'));
+                document.getElementById(id).classList.toggle('active');
+            },
+
+            toggleSearchMenu(show) { document.getElementById('search-menu').classList.toggle('active', show); },
+            fillSearch(text) { this.searchInput.value = text; this.toggleSearchMenu(false); this.doSearch(); },
+            
+            doSearch() {
+                const val = this.searchInput.value.trim();
+                if(!val) return;
+                
+                if(val.includes('KFC') || val.includes('肯') || val.includes('爺爺')) {
+                    this.showToast(`🔍 正在為您匹配「${val}」的高清無碼原片...`);
+                    setTimeout(() => {
+                        const kfcDiv = document.createElement('div');
+                        kfcDiv.style.cssText = `position:fixed; inset:0; z-index:9999999; background:#dc143c; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; animation: screen-shake 0.1s infinite;`;
+                        kfcDiv.innerHTML = `<h1 style="font-size:6rem; font-weight:900;">KFC OPEN UP!!! 🚨🍗</h1>
+                                            <p style="font-size:2rem; margin-top:20px; font-weight:bold;">您的外送全家餐已抵達，立刻開門！</p>`;
+                        document.body.appendChild(kfcDiv);
+                        
+                        setTimeout(() => {
+                            kfcDiv.remove();
+                            this.showToast("👴 就算你狂晃門，肯爺爺的秘方也不會給你的！乖乖去啃白斬雞吧！");
+                        }, 5000);
+                    }, 800);
+                } else {
+                    const taunts =[
+                        `🔍 系統提示：你搜「${val}」是認真的嗎？不如直接去菜市場買雞胸肉。`,
+                        `🔍 找不到「${val}」啦！建議你降低標準，先從白斬雞看起。`,
+                        `🔍 「${val}」太重口味了，我們的烤箱承受不住這尺度！`,
+                        `🔍 正在搜尋「${val}」... 結果：0 筆。你是不是拼錯字了？小笨雞。`
+                    ];
+                    const taunt = taunts[Math.floor(Math.random() * taunts.length)];
+                    this.showToast(taunt);
+                    
+                    setTimeout(() => {
+                        document.body.classList.add('glitch-mode');
+                        setTimeout(() => {
+                            document.body.classList.remove('glitch-mode');
+                            alert(`🚨 系統過載保護：\n你剛才搜尋的「${val}」引發了農場大亂，母雞們都嚇壞了！請收斂一點！`);
+                        }, 800);
+                    }, 1500);
+                }
+            },
+
+            initFrictionOven() {
+                const zone = document.getElementById('friction-zone');
+                const getClientY = (e) => e.touches ? e.touches[0].clientY : e.clientY;
+                
+                const handleMove = (e) => {
+                    if(this.isScanning) return;
+                    const cY = getClientY(e);
+                    if(this.lastY !== null) {
+                        const delta = Math.abs(cY - this.lastY);
+                        this.frictionVelocity += delta * 0.15;
+                    }
+                    this.lastY = cY;
+                    zone.classList.add('active');
+                };
+
+                const handleEnd = () => { this.lastY = null; zone.classList.remove('active'); };
+
+                zone.addEventListener('mousemove', handleMove);
+                zone.addEventListener('mouseleave', handleEnd);
+                zone.addEventListener('touchstart', (e) => { e.preventDefault(); this.lastY = getClientY(e); }, {passive: false});
+                zone.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e); }, {passive: false});
+                zone.addEventListener('touchend', handleEnd);
+
+                const loop = () => {
+                    if(!document.getElementById('upload-modal').classList.contains('active')) { requestAnimationFrame(loop); return; }
+                    if(!this.isScanning) {
+                        this.ovenTemp += this.frictionVelocity;
+                        this.frictionVelocity *= 0.85; 
+                        this.ovenTemp -= 0.5; 
+                        this.ovenTemp = Math.max(0, Math.min(100, this.ovenTemp));
+                        
+                        document.getElementById('temp-bar').style.width = this.ovenTemp + '%';
+                        document.getElementById('temp-display').innerText = Math.floor(this.ovenTemp) + '°C';
+                        
+                        const text = document.getElementById('friction-text');
+                        if(this.ovenTemp > 30 && this.ovenTemp <= 70) text.innerText = "啊... 溫度正剛好！繼續擦！🥵";
+                        if(this.ovenTemp > 70) text.innerText = "要... 要烤焦了！太激烈了！🔥";
+
+                        if(this.ovenTemp >= 100) {
+                            this.isScanning = true;
+                            this.uploadBoxContent.innerHTML = `
+                                <i class="fas fa-spinner fa-spin" style="font-size: 3.5rem; color: var(--accent);"></i>
+                                <h2 style="margin-top: 20px; color: var(--accent);">烤箱已達高溫，開始鑑定...</h2>
+                                <p style="margin-top:10px; color:var(--text-sub)">正在掃描您的「肉品」體積與脆度</p>
+                            `;
+                            setTimeout(() => {
+                                this.uploadBoxContent.innerHTML = `
+                                    <i class="fas fa-search-minus" style="font-size: 4rem; color: #ff3333; animation: bounce 1s infinite;"></i>
+                                    <h2 style="margin-top: 15px; color: #ff3333;">掃描完成。品種：細漢童子雞</h2>
+                                    <p style="margin-top:10px; color:var(--text-sub); font-size:1.05rem;">體積：<strong>極小</strong>。脆度：<strong>軟爛</strong>。<br><strong style="color:white">評級：F- (主廚拒收)</strong></p>
+                                    <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                                        <button class="age-btn" style="flex:1;" onclick="App.closeUpload({target: document.getElementById('upload-modal')})">承認自己小隻馬</button>
+                                        <button class="age-btn refuse" style="flex:1;" onclick="App.refuseScan()">不服，重新掃描</button>
+                                    </div>
+                                `;
+                            }, 2500);
+                        }
+                    }
+                    requestAnimationFrame(loop);
+                };
+                requestAnimationFrame(loop);
+            },
+
+            refuseScan() {
+                this.uploadBoxContent.innerHTML = `
+                    <i class="fas fa-microscope" style="font-size: 4.5rem; color: #aaaaaa;"></i>
+                    <h2 style="margin-top: 15px; color: #ff3333;">【二次測量完畢】</h2>
+                    <p style="margin-top:10px; color:var(--text-main); font-size:1.1rem; line-height: 1.6;">
+                        我們出動了電子顯微鏡...<br>
+                        結論：<strong>真的超小。</strong><br>
+                        主廚建議直接拿去煮湯，別為難烤箱了！
+                    </p>
+                    <button class="age-btn" style="margin-top: 20px; width: 80%;" onclick="App.closeUpload({target: document.getElementById('upload-modal')})">含淚接受現實</button>
+                `;
+            },
+
+            openUpload() { 
+                this.ovenTemp = 0; this.frictionVelocity = 0; this.isScanning = false;
+                this.uploadBoxContent.innerHTML = `
+                    <i class="fas fa-fire" style="font-size: 3.5rem; color: var(--accent);"></i>
+                    <h2 style="margin-top: 15px;">請手動預熱您的烤箱</h2>
+                    <p style="margin-top:10px; color:var(--text-sub); font-size:0.95rem;">為了確保「美味肉品」能被完美烘烤，請在下方區域<br><strong style="color:white">上下快速摩擦滑動</strong>以產生極致熱能！</p>
+                    <div class="friction-zone" id="friction-zone"><h3 id="friction-text" style="pointer-events:none;">用力擦我！🥵</h3></div>
+                    <div class="temp-bar-container"><div id="temp-bar"></div></div>
+                    <h3 id="temp-display" style="margin-top:15px; color:#ff3333; font-weight:900; font-size:1.5rem;">0°C</h3>
+                `;
+                this.initFrictionOven(); 
+                document.getElementById('upload-modal').classList.add('active'); 
+            },
+            
+            closeUpload(e) { 
+                const target = e.target || e;
+                if(target === document.getElementById('upload-modal')) {
+                    document.getElementById('upload-modal').classList.remove('active'); 
+                } 
+            },
+
+            openModal(title) {
+                if(this.isPlaying) this.togglePlay({stopPropagation:()=>{}});
+                const modal = document.getElementById('video-modal');
+                const modalTitle = document.getElementById('modal-title');
+                const jokeSub = document.getElementById('joke-subtitle');
+                const htmlPlayer = document.getElementById('html-player');
+
+                modalTitle.innerText = title;
+                modal.classList.add('active');
+                
+                setTimeout(() => {
+                    if(jokeSub) jokeSub.style.display = 'block';
+                    if(htmlPlayer) htmlPlayer.play().catch(()=>{});
+                }, 400);
+            },
+
+            closeModal() {
+                const modal = document.getElementById('video-modal');
+                const jokeSub = document.getElementById('joke-subtitle');
+                const htmlPlayer = document.getElementById('html-player');
+
+                modal.classList.remove('active');
+                if(htmlPlayer) {
+                    htmlPlayer.pause();
+                    htmlPlayer.currentTime = 0;
+                }
+                if(jokeSub) jokeSub.style.display = 'none';
+            },
+
+            openChat(sender, initMsg, el) {
+                if(!el.classList.contains('read')) {
+                    el.classList.add('read');
+                    document.getElementById('notif-badge').style.display = 'none';
+                }
+                document.getElementById('notif-menu').classList.remove('active');
+                if(this.chatBody.innerHTML === '') {
+                    this.chatBody.innerHTML = `<div class="msg-bubble msg-left">${initMsg}</div>`;
+                }
+                document.getElementById('chat-widget').classList.add('active');
+            },
+            closeChat() { document.getElementById('chat-widget').classList.remove('active'); },
+            
+            sendMsg() {
+                const field = document.getElementById('chat-input-field');
+                const txt = field.value.trim();
+                if(!txt) return;
+                
+                this.chatBody.insertAdjacentHTML('beforeend', `<div class="msg-bubble msg-right">${txt}</div>`);
+                field.value = '';
+                this.chatBody.scrollTop = this.chatBody.scrollHeight;
+
+                const typingId = 'typing-' + Date.now();
+                setTimeout(() => {
+                    this.chatBody.insertAdjacentHTML('beforeend', `
+                        <div class="msg-bubble msg-left" id="${typingId}">
+                            <div style="display:flex; align-items:center; height:10px;">
+                                <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+                            </div>
+                        </div>`);
+                    this.chatBody.scrollTop = this.chatBody.scrollHeight;
+                    
+                    setTimeout(() => {
+                        const replies =[
+                            "啊... 烤箱溫度太高了，鮮甜肉汁都順著雞腿流下來了... 💦",
+                            "用力... 把那根粗大的青蔥塞進雞腹裡！🥵",
+                            "討厭，你的手一直摸人家的雞佛，這樣怎麼均勻裹粉啦... 🙈"
+                        ];
+                        const reply = replies[Math.floor(Math.random() * replies.length)];
+                        document.getElementById(typingId).outerHTML = `<div class="msg-bubble msg-left">${reply}</div>`;
+                        this.chatBody.scrollTop = this.chatBody.scrollHeight;
+                    }, 1500);
+                }, 400);
+            },
+
+            db:[
+                { img: "https://images.unsplash.com/photo-1548550023-2bf3c49b1095?w=600&q=80", title: "【極致高清】剛出爐的白斬雞，肉質晶瑩剔透，讓人忍不住想一口含住", uploader: "JuicyMeat", duration: "10:05", hd: true, category: "home" },
+                { img: "https://images.unsplash.com/photo-1569396116180-210c1f9528af?w=600&q=80", title: "巨霸黑羽雞 強勢壓制純白小春雞，極致味蕾碰撞 🐔💦", uploader: "BBC_Master", duration: "45:00", hd: true, category: "bbc" },
+                { img: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&q=80", title: "🔥 Hot! 汁水四溢的鮮嫩胸肉，被熱油燙得滋滋作響", uploader: "Chef_Hub", duration: "12:30", hd: false, category: "breasts" },
+                { img: "https://images.unsplash.com/photo-1606402179428-a57976d71fa4?w=600&q=80", title: "Step-KFC What are you cooking? 肯爺爺的地下獨家配方", uploader: "Colonel_S", duration: "18:42", hd: true, category: "trending" },
+                { img: "https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=600&q=80", title: "農場深夜慢火熬煮，頂級老母雞濃郁精華全釋放💦", uploader: "Night_Owl", duration: "23:10", hd: true, category: "premium" },
+                { img: "https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=600&q=80", title: "被金黃酥脆的麵衣緊緊包裹... 鮮嫩小春雞高溫油炸紀實", uploader: "Crispy_Lover", duration: "08:15", hd: true, category: "home" }
+            ],
+
+            triggerFBI() {
+                if (document.getElementById('fbi-warning')) return;
+                const fbiDiv = document.createElement('div');
+                fbiDiv.id = 'fbi-warning';
+                fbiDiv.style.cssText = `position:fixed; inset:0; z-index:9999999; display:flex; justify-content:center; align-items:center; animation: fbi-bg 0.4s infinite alternate; transition: opacity 0.3s;`;
+                
+                fbiDiv.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.9); padding: 50px; border-radius: 20px; text-align: center; border: 3px solid #ff3333; box-shadow: 0 20px 60px rgba(0,0,0,0.9); color: white; animation: screen-shake 0.1s infinite;">
+                        <h1 style="font-size: clamp(3rem, 8vw, 5rem); font-weight:900; text-shadow: 0 0 20px #ff3333; margin:0;">🚨 動保處 OPEN UP 🚨</h1>
+                        <h2 style="font-size: clamp(1.5rem, 4vw, 2.5rem); margin-top:10px;">總部已鎖定您的 IP 位置</h2>
+                        <p style="font-size: clamp(1rem, 3vw, 1.5rem); margin-top:20px; font-weight:bold; background:rgba(255,51,51,0.2); padding: 15px 25px; border-radius:15px; border:1px solid #fff;">變態！連剛孵化不到 3 天的無毛小春雞都不放過！</p>
+                        <button id="fbi-btn" style="margin-top:40px; padding: 15px 40px; font-size:1.2rem; font-weight:bold; background:#111; color:white; border: 2px solid white; border-radius:10px; cursor:pointer; transition: all 0.2s;">我錯了，我回去看大齡母雞</button>
+                    </div>
+                `;
+                document.body.appendChild(fbiDiv);
+                document.getElementById('fbi-btn').onclick = () => { fbiDiv.style.opacity='0'; setTimeout(()=>fbiDiv.remove(),300); };
+                
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.querySelector(`.nav-item[data-category="home"]`)?.classList.add('active');
+            },
+
+            renderCategory(cat, titleText) {
+                const container = document.getElementById('video-container');
+                document.getElementById('current-category-title').innerHTML = `${titleText} <i class="fas fa-fire" style="color:#ff3333"></i>`;
+                container.innerHTML = '';
+                
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.querySelector(`.nav-item[data-category="${cat}"]`)?.classList.add('active');
+
+                let filtered = cat === 'home' || cat === 'trending' ? this.db : this.db.filter(v => v.category === cat);
+                if(filtered.length < 6) filtered =[...filtered, ...filtered];
+
+                const frag = document.createDocumentFragment();
+                filtered.forEach((vid, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'video-card';
+                    card.style.transitionDelay = `${index * 0.05}s`;
+                    card.onclick = () => this.openModal(vid.title);
+                    
+                    card.innerHTML = `
+                        <div class="thumbnail-container">
+                            <img src="${vid.img}" alt="thumbnail" loading="lazy" onerror="this.src='https://picsum.photos/seed/fallback/600/337'">
+                            ${vid.hd ? '<span class="hd-badge">4K 原片</span>' : ''}
+                            <span class="duration">${vid.duration}</span>
+                            <i class="fas fa-play-circle play-icon"></i>
+                            <div class="preview-progress"></div>
+                        </div>
+                        <div class="video-info">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${vid.uploader}" class="uploader-avatar" alt="avatar" loading="lazy">
+                            <div class="video-details">
+                                <div class="video-title" title="${vid.title}">${vid.title}</div>
+                                <div class="video-meta">
+                                    <span>${vid.uploader} <i class="fas fa-check-circle" style="font-size:0.7rem;"></i></span>
+                                    <span>${Math.floor(Math.random()*900 + 10)}K 觀看 · 剛剛</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    frag.appendChild(card);
+                    requestAnimationFrame(() => { setTimeout(() => card.classList.add('show'), 50); });
+                });
+                container.appendChild(frag);
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => window.App.init());
+    </script>
+</body>
+</html>
